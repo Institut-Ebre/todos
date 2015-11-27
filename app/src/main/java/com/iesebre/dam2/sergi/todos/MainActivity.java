@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity
     private Gson gson;
 
     public TodoArrayList tasks;
+    private CustomListAdapter adapter;
 
     @Override
     protected void onDestroy() {
@@ -51,13 +52,17 @@ public class MainActivity extends AppCompatActivity
         [
          {"name":"Comprar llet", "done": true, "priority": 2},
          {"name":"Comprar pa", "done": true, "priority": 1},
-         {"name":"Fer exercisi", "done": false, "priority": 3}
+         {"name":"Fer exercici", "done": false, "priority": 3}
+         {"name":"Estudiar", "done": false, "priority": 3}
         ]
          */
         if (todoList == null) {
-            String initial_json = "[{\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2},\n" +
+            String initial_json = "[\n" +
+                    "         {\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2},\n" +
                     "         {\"name\":\"Comprar pa\", \"done\": true, \"priority\": 1},\n" +
-                    "         {\"name\":\"Fer exercici\", \"done\": false, \"priority\": 3}]" ;
+                    "         {\"name\":\"Fer exercici\", \"done\": false, \"priority\": 3}\n" +
+                    "         {\"name\":\"Estudiar\", \"done\": false, \"priority\": 3}\n" +
+                    "        ]" ;
             SharedPreferences.Editor editor = todos.edit();
             editor.putString(TODO_LIST,initial_json);
             editor.commit();
