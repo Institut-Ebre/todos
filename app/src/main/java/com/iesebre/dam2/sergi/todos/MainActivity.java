@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,6 +15,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -54,15 +57,22 @@ public class MainActivity extends AppCompatActivity
         if (todoList == null) {
             String initial_json = "[{\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2},\n" +
                     "         {\"name\":\"Comprar pa\", \"done\": true, \"priority\": 1},\n" +
-                    "         {\"name\":\"Fer exercisi\", \"done\": false, \"priority\": 3}]" ;
+                    "         {\"name\":\"Fer exercici\", \"done\": false, \"priority\": 3}]" ;
             SharedPreferences.Editor editor = todos.edit();
-            editor.putString(SHARED_PREFERENCES_TODOS,initial_json);
+            editor.putString(TODO_LIST,initial_json);
             editor.commit();
             todoList = todos.getString(TODO_LIST, null);
         }
 
 
+        Log.d("TAG_PROVA","*********************************************************");
+        Log.d("TAG_PROVA",todoList);
+        Log.d("TAG_PROVA","*********************************************************");
 
+//        Snackbar.make(,todoList , Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+
+//        Toast.makeText(this, todoList, Toast.LENGTH_LONG).show();
 
         /* JSON EXAMPLE
 
@@ -75,6 +85,7 @@ public class MainActivity extends AppCompatActivity
 
 
         Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
+        this.gson = new Gson();
         TodoArrayList temp = gson.fromJson(todoList,arrayTodoList);
 
         if (temp != null) {
@@ -83,9 +94,18 @@ public class MainActivity extends AppCompatActivity
             //Error TODO
         }
 
+        ListView todoslv =
+                (ListView) findViewById(R.id.todolistview);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //We bind our arraylist of tasks to the adapter
+        adapter = new CustomListAdapter(this, tasks);
+        todoslv.setAdapter(adapter);
+
+
+        Toolbar toolbar = (Toolbar)
+                findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);

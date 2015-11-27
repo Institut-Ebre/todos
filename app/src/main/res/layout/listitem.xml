@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/todolistitem"
+    android:layout_width="fill_parent"
+    android:layout_height="match_parent"
+    >
+
+    <TextView
+        android:id="@+id/todolistitemtext"
+        android:layout_width="fill_parent"
+        android:layout_height="62dp"
+        android:paddingLeft="10dp"
+        android:text="Tasca de prova"
+        android:gravity="center_vertical"
+        android:textSize="20sp"
+        android:onClick="updateTask"
+        android:clickable="true"/>
+
+</RelativeLayout>
