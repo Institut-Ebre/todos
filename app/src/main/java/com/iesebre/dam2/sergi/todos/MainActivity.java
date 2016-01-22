@@ -1,9 +1,12 @@
 package com.iesebre.dam2.sergi.todos;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,8 +17,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ListView;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -32,10 +37,28 @@ public class MainActivity extends AppCompatActivity
 
     public TodoArrayList tasks;
     private CustomListAdapter adapter;
+    private String taskName;
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        //Serialize our TaskArrayList to Json
+        Type taskArrayListType = new TypeToken<TodoArrayList>(){}.getType();
+        String serializedData = gson.toJson(tasks, taskArrayListType);
+
+        System.out.println("Saving: " + serializedData);
+
+        //Save tasks in SharedPreferences
+        SharedPreferences preferencesReader = getSharedPreferences(SHARED_PREFERENCES_TODOS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferencesReader.edit();
+        editor.putString(TODO_LIST, serializedData);
+        editor.apply();
     }
 
     @Override
@@ -114,16 +137,6 @@ public class MainActivity extends AppCompatActivity
 
         FloatingActionButton fab =
                 (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener()   {
-//            @Override
-//            public void onClick(View view) {
-//
-////                Intent intent = new Intent(MainActivity.this, Main2Activity.class);
-////                startActivity(intent);
-////                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-////                        .setAction("Action", null).show();
-//            }
-//        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -192,19 +205,74 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public void showEditTaskForm(View view) {
+
+    }
 
     public void showAddTaskForm(View view) {
-        MaterialDialog dialog = new MaterialDialog.Builder(this).
+        taskName = "";
+        EditText taskNameText;
+
+        MaterialDialog dialog @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            } = new MaterialDialog.Builder(this).
                 title("Afegir tasca").
                 customView(R.layout.form_add_task, true).
                 negativeText("Cancel·lar").
                 positiveText("Afegir").
                 negativeColor(Color.parseColor("#2196F3")).
                 positiveColor(Color.parseColor("#2196F3")).
-                //onPositive( {
-                //}).
+                onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(MaterialDialog dialog, DialogAction which) {
+                        final TodoItem todoItem = new TodoItem();
+//                        EditText et = (EditText) dialog.getCustomView().findViewById(R.id.task_title);
+//                        todoItem.setName(et.toString());
+                        todoItem.setName(taskName);
+                        todoItem.setDone(true);
+                        todoItem.setPriority(1);
+
+                        tasks.add(todoItem);
+                        adapter.notifyDataSetChanged();
+                    }
+                }).
                 build();
 
-        dialog.show();
+                dialog.show();
+
+        taskNameText = (EditText) dialog.getCustomView().findViewById(R.id.task_title);
+
+        //If we name a task and it has a priority, enable positive button
+        taskNameText.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                 taskName = s.toString();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+                //new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//                taskName = s.toString();
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//            }
+        });
     }
 }

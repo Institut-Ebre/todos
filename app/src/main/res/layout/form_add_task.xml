@@ -14,4 +14,8 @@
         android:maxLines="1"
         android:hint="Nom tasca"/>
 
+
+    <!--- PRIORITY -->
+    <!--- DONE -->
+
 </LinearLayout>
