@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -23,7 +24,13 @@ import android.widget.ListView;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+
+import org.json.JSONArray;
 
 import java.lang.reflect.Type;
 
@@ -38,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     public TodoArrayList tasks;
     private CustomListAdapter adapter;
     private String taskName;
+    private String todoList="";
+    private SwipeRefreshLayout swipeContainer;
 
     @Override
     protected void onDestroy() {
@@ -66,35 +75,50 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SharedPreferences todos = getSharedPreferences(SHARED_PREFERENCES_TODOS, 0);
-        String todoList = todos.getString(TODO_LIST, null);
-
-        /* JSON EXAMPLE
-
-        [
-         {"name":"Comprar llet", "done": true, "priority": 2},
-         {"name":"Comprar pa", "done": true, "priority": 1},
-         {"name":"Fer exercici", "done": false, "priority": 3}
-         {"name":"Estudiar", "done": false, "priority": 3}
-        ]
-         */
-        if (todoList == null) {
-            String initial_json = "[\n" +
-                    "         {\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2},\n" +
-                    "         {\"name\":\"Comprar pa\", \"done\": true, \"priority\": 1},\n" +
-                    "         {\"name\":\"Fer exercici\", \"done\": false, \"priority\": 3}\n" +
-                    "         {\"name\":\"Estudiar\", \"done\": false, \"priority\": 3}\n" +
-                    "        ]" ;
-            SharedPreferences.Editor editor = todos.edit();
-            editor.putString(TODO_LIST,initial_json);
-            editor.commit();
-            todoList = todos.getString(TODO_LIST, null);
-        }
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to refresh the list here.
+                // Make sure you call swipeContainer.setRefreshing(false)
+                // once the network request has completed successfully.
+                fetchJsonTodos();
+            }
+        });
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
 
 
-        Log.d("TAG_PROVA","*********************************************************");
-        Log.d("TAG_PROVA",todoList);
-        Log.d("TAG_PROVA","*********************************************************");
+//        SharedPreferences todos = getSharedPreferences(SHARED_PREFERENCES_TODOS, 0);
+//        String todoList = todos.getString(TODO_LIST, null);
+//
+//        /* JSON EXAMPLE
+//
+//        [
+//         {"name":"Comprar llet", "done": true, "priority": 2},
+//         {"name":"Comprar pa", "done": true, "priority": 1},
+//         {"name":"Fer exercici", "done": false, "priority": 3}
+//         {"name":"Estudiar", "done": false, "priority": 3}
+//        ]
+//         */
+//        if (todoList == null) {
+//            String initial_json = "[\n" +
+//                    "         {\"name\":\"Comprar llet\", \"done\": true, \"priority\": 2},\n" +
+//                    "         {\"name\":\"Comprar pa\", \"done\": true, \"priority\": 1},\n" +
+//                    "         {\"name\":\"Fer exercici\", \"done\": false, \"priority\": 3},\n" +
+//                    "         {\"name\":\"Estudiar\", \"done\": false, \"priority\": 3}\n" +
+//                    "        ]" ;
+//            SharedPreferences.Editor editor = todos.edit();
+//            editor.putString(TODO_LIST,initial_json);
+//            editor.commit();
+//            todoList = todos.getString(TODO_LIST, null);
+//        }
+
+        fetchJsonTodos();
+
 
 //        Snackbar.make(,todoList , Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
@@ -110,7 +134,42 @@ public class MainActivity extends AppCompatActivity
         ]
          */
 
+        Toolbar toolbar = (Toolbar)
+                findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
+        FloatingActionButton fab =
+                (FloatingActionButton) findViewById(R.id.fab);
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    private void fetchJsonTodos() {
+        Ion.with(this)
+                .load("http://acacha.github.io/json-server-todos/db_todos.json")
+                .asJsonArray()
+                .setCallback(new FutureCallback<JsonArray>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonArray result) {
+                        // do stuff with the result or error
+                        todoList = result.toString();
+                        Log.d("TAG_PROVA", "*********************************************************");
+                        Log.d("TAG_PROVA AAAA ", todoList);
+                        Log.d("TAG_PROVA", "*********************************************************");
+                        updateTodoList();
+                    }
+                });
+    }
+
+
+    private void updateTodoList() {
         Type arrayTodoList = new TypeToken<TodoArrayList>() {}.getType();
         this.gson = new Gson();
         TodoArrayList temp = gson.fromJson(todoList,arrayTodoList);
@@ -128,24 +187,7 @@ public class MainActivity extends AppCompatActivity
         adapter = new CustomListAdapter(this, tasks);
         todoslv.setAdapter(adapter);
 
-
-        Toolbar toolbar = (Toolbar)
-                findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-
-
-        FloatingActionButton fab =
-                (FloatingActionButton) findViewById(R.id.fab);
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        swipeContainer.setRefreshing(false);
     }
 
     @Override
@@ -213,9 +255,7 @@ public class MainActivity extends AppCompatActivity
         taskName = "";
         EditText taskNameText;
 
-        MaterialDialog dialog @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            } = new MaterialDialog.Builder(this).
+        MaterialDialog dialog = new MaterialDialog.Builder(this).
                 title("Afegir tasca").
                 customView(R.layout.form_add_task, true).
                 negativeText("Cancel·lar").
@@ -259,20 +299,6 @@ public class MainActivity extends AppCompatActivity
             public void afterTextChanged(Editable s) {
 
             }
-        });
-                //new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                taskName = s.toString();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//            }
         });
     }
 }
